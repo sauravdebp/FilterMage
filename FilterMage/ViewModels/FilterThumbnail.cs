@@ -9,11 +9,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using FilterMage.Models;
 
 namespace FilterMage.ViewModels
 {
     public class FilterThumbnail : INotifyPropertyChanged
     {
+        public Effect effect = null;
+
+        public int thumbHeight;
+        public int thumbWidth;
+
         private WriteableBitmap _thumbnailImg = null;
         public WriteableBitmap thumbnailImg
         {
@@ -24,41 +30,37 @@ namespace FilterMage.ViewModels
                 NotifyPropertyChanged("thumbnailImg");
             }
         }
-        private IFilter filter = null;
-        private Stream originalImageStream = null;
 
-        public FilterThumbnail(IFilter filter, Stream originalImage)
+        private string _filterName;
+        public string filterName
         {
-            this.filter = filter;
-            this.originalImageStream = originalImage;
-            ApplyEffect();
+            get { return _filterName; }
+            set
+            {
+                _filterName = value;
+                NotifyPropertyChanged("filterName");
+            }
         }
 
-        private async void ApplyEffect()
+        public FilterThumbnail(IFilter filter, string filterName, WriteableBitmap originalImage)
         {
-            originalImageStream.Position = 0;
-            WriteableBitmap bmp = new WriteableBitmap(200, 200);
-            bmp.SetSource(originalImageStream);
+            effect = new Effect(filter);
+            this.filterName = filterName;
+            this.thumbWidth = originalImage.PixelWidth;
+            this.thumbHeight = originalImage.PixelHeight;
+            ApplyEffect(originalImage);
+        }
+
+        private async void ApplyEffect(WriteableBitmap sourceImg)
+        {
             try
             {
-                using (var imageStream = new BitmapImageSource(bmp.AsBitmap()))
-                {
-                    using (var effect = new FilterEffect(imageStream))
-                    {
-                        List<IFilter> filters = new List<IFilter>();
-                        filters.Add(filter);
-                        effect.Filters = filters;
-                        thumbnailImg = new WriteableBitmap(200, 200);
-                        using (var renderer = new WriteableBitmapRenderer(effect, thumbnailImg))
-                        {
-                            thumbnailImg = await renderer.RenderAsync();
-                        }
-                    }
-                }
+                thumbnailImg = new WriteableBitmap(thumbWidth, thumbHeight);
+                thumbnailImg = await effect.ApplyEffect(sourceImg, thumbnailImg);
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message + " in FilterThumbnail");
+                MessageBox.Show(e.Message + " in FilterThumbnail::ApplyEffect()");
             }
         }
 
@@ -74,7 +76,7 @@ namespace FilterMage.ViewModels
 
         public override string ToString()
         {
-            return "HELLO";
+            return filterName;
         }
     }
 }

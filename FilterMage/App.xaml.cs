@@ -7,6 +7,8 @@ using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using FilterMage.Resources;
+using System.Collections.Generic;
+using Nokia.Graphics.Imaging;
 
 namespace FilterMage
 {
@@ -17,7 +19,7 @@ namespace FilterMage
         /// </summary>
         /// <returns>The root frame of the Phone Application.</returns>
         public static PhoneApplicationFrame RootFrame { get; private set; }
-
+        public Dictionary<String, IFilter> supportedFilters = new Dictionary<string, IFilter>();
         /// <summary>
         /// Constructor for the Application object.
         /// </summary>
@@ -61,6 +63,14 @@ namespace FilterMage
         // This code will not execute when the application is reactivated
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
+            supportedFilters.Add("Antique", new AntiqueFilter());
+            supportedFilters.Add("Cartoon", new CartoonFilter());
+            supportedFilters.Add("Contrast", new ContrastFilter());
+            supportedFilters.Add("Grayscale", new GrayscaleFilter());
+            supportedFilters.Add("Grayscale Negative", new GrayscaleNegativeFilter());
+            supportedFilters.Add("Despeckle", new DespeckleFilter());
+            supportedFilters.Add("Color Boost", new ColorBoostFilter());
+            supportedFilters.Add("Color Swap", new ColorSwapFilter());
         }
 
         // Code to execute when the application is activated (brought to foreground)

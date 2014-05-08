@@ -1,42 +1,37 @@
-﻿using FilterMage.Resources;
-using FilterMage.ViewModels;
+﻿using FilterMage.ViewModels;
 using Microsoft.Phone.Controls;
-using Microsoft.Phone.Shell;
 using Microsoft.Phone.Tasks;
 using Nokia.Graphics.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
+using FilterMage.Models;
+using Windows.Storage.Streams;
 
 namespace FilterMage
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        BitmapImage originalImage = null;
-        Stream ActivePhoto = null;
+        Stream chosenPhoto;
+        private WriteableBitmap previewImage = null;
+        private int previewImageWidth = 400;
+        private int previewImageHeight = 350;
+        private int thumbnailWidth = 200;
+        private int thumbnailHeight = 200;
         public ObservableCollection<FilterThumbnail> filterThumbnails = null;
+        public ObservableCollection<IFilter> activeFilters = null;
      
         // Constructor
         public MainPage()
         {
             InitializeComponent();
             filterThumbnails = new ObservableCollection<FilterThumbnail>();
+            activeFilters = new ObservableCollection<IFilter>();
             List_Thumbnails.DataContext = filterThumbnails;
-            // Sample code to localize the ApplicationBar
-            //BuildLocalizedApplicationBar();
-            /*PhotoChooserTask chooser = new PhotoChooserTask();
-            chooser.Completed += chooser_Completed;
-            chooser.Show();
-            SelectImage.Text = "Loading Image...";*/
         }
         
         private void SelectImage_Tap(object sender, System.Windows.Input.GestureEventArgs e)
@@ -44,7 +39,6 @@ namespace FilterMage
             PhotoChooserTask chooser = new PhotoChooserTask();
             chooser.Completed += chooser_Completed;
             chooser.Show();
-            SelectImage.Text = "Loading Image...";
         }
 
         private void chooser_Completed(object sender, PhotoResult e)
@@ -52,44 +46,32 @@ namespace FilterMage
             if (e.TaskResult != TaskResult.OK || e.ChosenPhoto == null)
                 return;
 
-            ActivePhoto = e.ChosenPhoto;
-            originalImage = new BitmapImage();
-            originalImage.SetSource(ActivePhoto);
-            ActivePhoto.Position = 0;
+            BitmapImage bmp = new BitmapImage();
+            bmp.SetSource(e.ChosenPhoto);
             e.ChosenPhoto.Position = 0;
+            previewImage = new WriteableBitmap(bmp.PixelWidth, bmp.PixelHeight);
+            previewImage.SetSource(e.ChosenPhoto);
+            e.ChosenPhoto.Position = 0;
+            chosenPhoto = e.ChosenPhoto;
             
-            EditImage.Source = originalImage;
+            Image_PreviewImage.Source = previewImage;
             SelectImage.Visibility = System.Windows.Visibility.Collapsed;
-            EditImage.Visibility = System.Windows.Visibility.Visible;
 
-            /*var imageStream = new StreamImageSource(ActivePhoto);
-            FilterEffect effect = new FilterEffect(imageStream);
-            var filter = new AntiqueFilter();
-            effect.Filters = new[] { filter };
-            WriteableBitmap filterImg = new WriteableBitmap(100, 100);
-            var renderer = new WriteableBitmapRenderer(effect, filterImg);
-            filterImg = await renderer.RenderAsync();
-
-            FilterImage.Source = filterImg;
-            */
-
-            //FilterThumbnail thumb = new FilterThumbnail(new CartoonFilter(), ActivePhoto);
-            //FilterImage.Source = await thumb.ApplyEffect();
-            addFilterThumbnails();
+            WriteableBitmap chosenImage = new WriteableBitmap(thumbnailWidth, thumbnailHeight);
+            chosenImage.SetSource(e.ChosenPhoto);
+            addFilterThumbnails(chosenImage);
         }
 
-        private void addFilterThumbnails()
+        private void addFilterThumbnails(WriteableBitmap image)
         {
             try
             {
-                filterThumbnails.Add(new FilterThumbnail(new AntiqueFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new CartoonFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new ContrastFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new GrayscaleFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new GrayscaleNegativeFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new DespeckleFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new ColorBoostFilter(), ActivePhoto));
-                filterThumbnails.Add(new FilterThumbnail(new ColorSwapFilter(), ActivePhoto));
+                var filters = (App.Current as App).supportedFilters;
+                filterThumbnails.Clear();
+                foreach (KeyValuePair<String, IFilter> filter in filters)
+                {
+                    filterThumbnails.Add(new FilterThumbnail(filter.Value, filter.Key, image));
+                }
             }
             catch (Exception e)
             {
@@ -101,6 +83,21 @@ namespace FilterMage
         {
             base.OnOrientationChanged(e);
         }
+
+        private async void Image_Tap(object sender, System.Windows.Input.GestureEventArgs e)
+        {
+            Image img = sender as Image;
+            FilterThumbnail t = (FilterThumbnail)img.DataContext;
+            Effect eff = new Effect(t.effect.filters);
+            WriteableBitmap newImage = new WriteableBitmap(previewImageWidth, previewImageHeight);
+            newImage = await eff.ApplyEffect(previewImage, newImage);
+            previewImage = newImage;
+            Image_PreviewImage.Source = previewImage;
+            //filterThumbnails.Remove(t);
+            WriteableBitmap thumbImg = new WriteableBitmap(previewImage);
+            addFilterThumbnails(thumbImg);
+        }
+
         // Sample code for building a localized ApplicationBar
         //private void BuildLocalizedApplicationBar()
         //{
