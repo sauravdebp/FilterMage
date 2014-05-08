@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using FilterMage.Models;
@@ -25,25 +24,32 @@ namespace FilterMage.ViewModels
             }
         }
 
-        public ObservableCollection<IFilter> activeFilters = null;
+        private ObservableCollection<IFilter> activeFilters = null;
 
-        public Preview(Stream image)
+        public Preview(Stream image, int height)
         {
-            image.Position = 0;
-            BitmapImage bmp = new BitmapImage();
-            bmp.SetSource(image);
-            previewImage = new WriteableBitmap(bmp.PixelWidth, bmp.PixelHeight);
-            previewImage.SetSource(image);
             activeFilters = new ObservableCollection<IFilter>();
+            previewImage = CreatePreviewFromStream(image, height);
         }
 
-        public async void ApplyFilters(List<IFilter> filters)
+        private WriteableBitmap CreatePreviewFromStream(Stream image, int height)
+        {
+            image.Position = 0;
+            previewImage = new WriteableBitmap(height, height);
+            previewImage.SetSource(image);
+            Resolution dim = new Resolution(previewImage.PixelWidth, previewImage.PixelHeight, height);
+            previewImage = previewImage.Resize(dim.width, dim.height, WriteableBitmapExtensions.Interpolation.Bilinear);
+            return previewImage;
+        }
+
+        public async Task<WriteableBitmap> ApplyFilters(List<IFilter> filters)
         {
             activeFilters.Concat<IFilter>(filters);
             Effect eff = new Effect(filters);
             WriteableBitmap newImage = new WriteableBitmap(previewImage.PixelWidth, previewImage.PixelHeight);
             newImage = await eff.ApplyEffect(previewImage, newImage);
             previewImage = newImage;
+            return previewImage;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

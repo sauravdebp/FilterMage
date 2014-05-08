@@ -64,12 +64,12 @@ namespace FilterMage
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
             supportedFilters.Add("Antique", new AntiqueFilter());
-            supportedFilters.Add("Cartoon", new CartoonFilter());
-            supportedFilters.Add("Contrast", new ContrastFilter());
+            supportedFilters.Add("Cartoon", new CartoonFilter(true));
+            supportedFilters.Add("Contrast", new ContrastFilter(0.5));
             supportedFilters.Add("Grayscale", new GrayscaleFilter());
             supportedFilters.Add("Grayscale Negative", new GrayscaleNegativeFilter());
-            supportedFilters.Add("Despeckle", new DespeckleFilter());
-            supportedFilters.Add("Color Boost", new ColorBoostFilter());
+            supportedFilters.Add("Despeckle", new DespeckleFilter(DespeckleLevel.High));
+            supportedFilters.Add("Color Boost", new ColorBoostFilter(10.0));
             supportedFilters.Add("Color Swap", new ColorSwapFilter());
         }
 

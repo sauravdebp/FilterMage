@@ -1,12 +1,6 @@
 ﻿using Nokia.Graphics.Imaging;
-using Nokia.InteropServices.WindowsRuntime;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using FilterMage.Models;
@@ -55,6 +49,7 @@ namespace FilterMage.ViewModels
         {
             try
             {
+                //MessageBox.Show(thumbWidth + " X " + thumbHeight);
                 thumbnailImg = new WriteableBitmap(thumbWidth, thumbHeight);
                 thumbnailImg = await effect.ApplyEffect(sourceImg, thumbnailImg);
             }
