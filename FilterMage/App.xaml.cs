@@ -9,6 +9,9 @@ using Microsoft.Phone.Shell;
 using FilterMage.Resources;
 using System.Collections.Generic;
 using Nokia.Graphics.Imaging;
+using FilterMage.ViewModels;
+using FilterMage.Models;
+using System.Windows.Media.Imaging;
 
 namespace FilterMage
 {
@@ -20,6 +23,8 @@ namespace FilterMage
         /// <returns>The root frame of the Phone Application.</returns>
         public static PhoneApplicationFrame RootFrame { get; private set; }
         public Dictionary<String, IFilter> supportedFilters = new Dictionary<string, IFilter>();
+        public Dictionary<string, FilterProperty> filterProperties = new Dictionary<string, FilterProperty>();
+        public WriteableBitmap Image = null;
         /// <summary>
         /// Constructor for the Application object.
         /// </summary>
@@ -64,13 +69,26 @@ namespace FilterMage
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
             supportedFilters.Add("Antique", new AntiqueFilter());
-            supportedFilters.Add("Cartoon", new CartoonFilter(true));
-            supportedFilters.Add("Contrast", new ContrastFilter(0.5));
+            supportedFilters.Add("Blur", new BlurFilter(new BlurFilterProperty().KernelSize));
+            supportedFilters.Add("Cartoon", new CartoonFilter(new CartoonFilterProperty().DistinctEdges));
+            supportedFilters.Add("Color Boost", new ColorBoostFilter(new ColorBoostFilterProperty().Gain));
+            supportedFilters.Add("Color Swap", new ColorSwapFilter());
+            supportedFilters.Add("Contrast", new ContrastFilter(new ContrastFilterProperty().ContrastLevel));
+            supportedFilters.Add("Curves", new CurvesFilter());
+            supportedFilters.Add("Despeckle", new DespeckleFilter(new DespeckleFilterProperty().DespeckleLevel));
+            supportedFilters.Add("Emboss", new EmbossFilter(new EmbossFilterProperty().Level));
+            supportedFilters.Add("Flip", new FlipFilter(new FlipFilterProperty().FlipMode));
+            supportedFilters.Add("Fog", new FogFilter());
             supportedFilters.Add("Grayscale", new GrayscaleFilter());
             supportedFilters.Add("Grayscale Negative", new GrayscaleNegativeFilter());
-            supportedFilters.Add("Despeckle", new DespeckleFilter(DespeckleLevel.High));
-            supportedFilters.Add("Color Boost", new ColorBoostFilter(10.0));
-            supportedFilters.Add("Color Swap", new ColorSwapFilter());
+
+            filterProperties.Add("Blur", new BlurFilterProperty());
+            filterProperties.Add("Cartoon", new CartoonFilterProperty());
+            filterProperties.Add("Color Boost", new ColorBoostFilterProperty());
+            filterProperties.Add("Contrast", new ContrastFilterProperty());
+            filterProperties.Add("Despeckle", new DespeckleFilterProperty());
+            filterProperties.Add("Emboss", new EmbossFilterProperty());
+            filterProperties.Add("Flip", new FlipFilterProperty());
         }
 
         // Code to execute when the application is activated (brought to foreground)

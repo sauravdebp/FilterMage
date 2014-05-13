@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using FilterMage.Models;
+using System.Reflection;
 
 namespace FilterMage.ViewModels
 {
@@ -34,6 +35,24 @@ namespace FilterMage.ViewModels
                 _filterName = value;
                 NotifyPropertyChanged("filterName");
             }
+        }
+
+        private int _rotateAngle;
+        public int rotateAngle
+        {
+            get { return _rotateAngle; }
+            set
+            {
+                _rotateAngle = value;
+                NotifyPropertyChanged("rotateAngle");
+            }
+        }
+
+        public PropertyInfo[] GetFilterProperties()
+        {
+            IFilter filter = effect.filters[0];
+            PropertyInfo[] props = filter.GetType().GetProperties();
+            return props;
         }
 
         public FilterThumbnail(IFilter filter, string filterName, WriteableBitmap originalImage)
