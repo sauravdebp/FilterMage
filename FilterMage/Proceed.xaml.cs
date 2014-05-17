@@ -12,6 +12,7 @@ using System.IO;
 using Microsoft.Xna.Framework.Media;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Phone.Tasks;
 
 namespace FilterMage
 {
@@ -74,7 +75,10 @@ namespace FilterMage
 
         private void AppBarBut_Share_Click(object sender, EventArgs e)
         {
-
+            ShareLinkTask share = new ShareLinkTask();
+            share.Title = "Share Photo";
+            share.LinkUri = new Uri("http://www.facebook.com", UriKind.Absolute);
+            share.Show();
         }
     }
 }

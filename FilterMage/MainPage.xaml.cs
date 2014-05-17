@@ -21,11 +21,10 @@ namespace FilterMage
     {
         Stream chosenPhoto;
         private int thumbnailHeight = 200;
-        private int previewWidth;
-        private int previewHeight;
+        private int previewWidth = 0;
+        private int previewHeight = 0;
         public Preview preview = null;
         public ObservableCollection<FilterThumbnail> filterThumbnails = null;
-        private FilterThumbnail latestThumb;
         private enum States { INITIAL, IMAGE_LOADED, FILTER_APPLIED, EDITABLE_FILTER_APPLIED };
         private States _PageState;
         private States PageState
@@ -51,7 +50,7 @@ namespace FilterMage
                         case States.FILTER_APPLIED:
                             foreach (ApplicationBarIconButton but in ApplicationBar.Buttons)
                             {
-                                //if (but.Text != "edit last filter")
+                                if (but.Text != "edit last filter")
                                 {
                                     but.IsEnabled = true;
                                 }
@@ -90,7 +89,7 @@ namespace FilterMage
         {
             if (e.TaskResult != TaskResult.OK || e.ChosenPhoto == null)
                 return;
-
+            
             chosenPhoto = e.ChosenPhoto;
             preview = new Preview(e.ChosenPhoto, previewWidth, previewHeight);
             Image_PreviewImage.Source = preview.previewImage;
@@ -100,6 +99,7 @@ namespace FilterMage
             WriteableBitmap chosenImage = new WriteableBitmap(thumbnailHeight, thumbnailHeight);
             chosenImage.SetSource(e.ChosenPhoto);
             addFilterThumbnails(chosenImage);
+            
             PageState = States.IMAGE_LOADED;
         }
 
@@ -111,9 +111,9 @@ namespace FilterMage
                 image = image.Resize(dim.width, dim.height, WriteableBitmapExtensions.Interpolation.Bilinear);
                 var filters = (App.Current as App).supportedFilters;
                 filterThumbnails.Clear();
-                foreach (KeyValuePair<String, IFilter> filter in filters)
+                foreach (Wrap_Filter filter in filters)
                 {
-                    filterThumbnails.Add(new FilterThumbnail(filter.Value, filter.Key, image));
+                    filterThumbnails.Add(new FilterThumbnail(filter, image));
                 }
             }
             catch (Exception e)
@@ -125,14 +125,16 @@ namespace FilterMage
         private async void Image_Tap(object sender, System.Windows.Input.GestureEventArgs e)
         {
             Image img = sender as Image;
-            latestThumb = (FilterThumbnail)img.DataContext;
-            Image_PreviewImage.Source = await preview.ApplyFilters(latestThumb.effect.filters);
+            FilterThumbnail selectedThumb = (FilterThumbnail)img.DataContext;
+            Image_PreviewImage.Source = await preview.ApplyFilter(selectedThumb.wrapFilter);
             WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
             addFilterThumbnails(thumbImg);
             if (preview.noofFilters > 0)
             {
-                
-                PageState = States.FILTER_APPLIED;
+                if (selectedThumb.wrapFilter.isEditable())
+                    PageState = States.EDITABLE_FILTER_APPLIED;
+                else
+                    PageState = States.FILTER_APPLIED;
             }
             //setThumbAngle();
         }
@@ -140,6 +142,15 @@ namespace FilterMage
         private async void AppBarBut_Undo_Click(object sender, EventArgs e)
         {
             (sender as ApplicationBarIconButton).IsEnabled = false;
+            Wrap_Filter lastFilter = preview.GetLastFilter();
+            if (!lastFilter.isEditable())
+            {
+                PageState = States.FILTER_APPLIED;
+            }
+            else
+            {
+                PageState = States.EDITABLE_FILTER_APPLIED;
+            }
             Image_PreviewImage.Source = await preview.UndoLastFilter();
             WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
             addFilterThumbnails(thumbImg);
@@ -170,15 +181,29 @@ namespace FilterMage
         
         private void Grid_Preview_Loaded(object sender, RoutedEventArgs e)
         {
-            previewWidth = (int)Grid_Preview.ActualWidth;
-            previewHeight = (int)Grid_Preview.ActualHeight;
+            if (previewWidth == 0 && previewHeight == 0)
+            {
+                previewWidth = (int)Grid_Preview.ActualWidth;
+                previewHeight = (int)Grid_Preview.ActualHeight;
+            }
         }
 
         private void AppBarBut_Edit_Click(object sender, EventArgs e)
         {
-            PhoneApplicationService.Current.State["preview"] = preview;
-            PhoneApplicationService.Current.State["latestThumb"] = latestThumb;
+            (App.Current as App).tempPreview = preview;
             NavigationService.Navigate(new Uri("/FineTuneFilter.xaml", UriKind.Relative));
+        }
+        
+        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if(PhoneApplicationService.Current.State.ContainsKey("RefreshThumbs"))
+            {
+                PhoneApplicationService.Current.State.Clear();
+                Image_PreviewImage.Source = preview.previewImage;
+                WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
+                addFilterThumbnails(thumbImg);
+            }
         }
 
         /*protected override void OnOrientationChanged(OrientationChangedEventArgs e)

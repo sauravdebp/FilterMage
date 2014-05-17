@@ -10,7 +10,8 @@ namespace FilterMage.ViewModels
 {
     public class FilterThumbnail : INotifyPropertyChanged
     {
-        public Effect effect = null;
+        //public Effect effect = null;
+        public Wrap_Filter wrapFilter = null;
 
         public int thumbHeight;
         public int thumbWidth;
@@ -48,17 +49,11 @@ namespace FilterMage.ViewModels
             }
         }
 
-        public PropertyInfo[] GetFilterProperties()
+        public FilterThumbnail(Wrap_Filter filter, WriteableBitmap originalImage)
         {
-            IFilter filter = effect.filters[0];
-            PropertyInfo[] props = filter.GetType().GetProperties();
-            return props;
-        }
-
-        public FilterThumbnail(IFilter filter, string filterName, WriteableBitmap originalImage)
-        {
-            effect = new Effect(filter);
-            this.filterName = filterName;
+            //effect = new Effect(filter.filter);
+            this.wrapFilter = filter;
+            this.filterName = filter.filterName;
             this.thumbWidth = originalImage.PixelWidth;
             this.thumbHeight = originalImage.PixelHeight;
             ApplyEffect(originalImage);
@@ -68,7 +63,7 @@ namespace FilterMage.ViewModels
         {
             try
             {
-                //MessageBox.Show(thumbWidth + " X " + thumbHeight);
+                Effect effect = new Effect(wrapFilter.filter);
                 thumbnailImg = new WriteableBitmap(thumbWidth, thumbHeight);
                 thumbnailImg = await effect.ApplyEffect(sourceImg, thumbnailImg);
             }

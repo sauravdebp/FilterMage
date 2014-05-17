@@ -12,7 +12,7 @@
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait" Orientation="Portrait"
     mc:Ignorable="d"
-    shell:SystemTray.IsVisible="True">
+    shell:SystemTray.IsVisible="False">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
@@ -37,10 +37,81 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
             <Image Name="Image_PreviewImage" Grid.Row="0" />
-            <StackPanel Name="Stack_FineControls" Grid.Row="1">
-                
-            </StackPanel>
+            <ScrollViewer Grid.Row="1">
+                <StackPanel Name="Stack_FineControls" ScrollViewer.VerticalScrollBarVisibility="Visible">
+                    <ListBox Name="List_EnumProps" ItemsSource="{Binding}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding PropertyName}" />
+                                    <tk:ListPicker ItemsSource="{Binding Enums}" SelectedIndex="{Binding Value, Mode=TwoWay}">
+                                        <tk:ListPicker.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Value}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </tk:ListPicker.ItemTemplate>
+                                    </tk:ListPicker>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <ListBox Name="List_BoolProps" ItemsSource="{Binding}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding PropertyName}"></TextBlock>
+                                    <tk:ToggleSwitch IsChecked="{Binding Value, Mode=TwoWay}"></tk:ToggleSwitch>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <ListBox Name="List_RangeProps" ItemsSource="{Binding}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding PropertyName}" />
+                                    <Slider Value="{Binding Value, Mode=TwoWay}" 
+                                        Maximum="{Binding Max, Mode=OneTime}" 
+                                        Minimum="{Binding Min, Mode=OneTime}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 
+    <phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar>
+            <shell:ApplicationBarIconButton x:Name="AppBarBut_Proceed" 
+                                            Click="AppBarBut_Proceed_Click" 
+                                            IconUri="/Assets/AppBar/check.png" 
+                                            Text="Proceed"/>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
+    
 </phone:PhoneApplicationPage>

@@ -22,9 +22,11 @@ namespace FilterMage
         /// </summary>
         /// <returns>The root frame of the Phone Application.</returns>
         public static PhoneApplicationFrame RootFrame { get; private set; }
-        public Dictionary<String, IFilter> supportedFilters = new Dictionary<string, IFilter>();
-        public Dictionary<string, FilterProperty> filterProperties = new Dictionary<string, FilterProperty>();
+        //public Dictionary<String, IFilter> supportedFilters = new Dictionary<string, IFilter>();
+        //public Dictionary<string, Im_Filter> filterProperties = new Dictionary<string, Im_Filter>();
+        public List<Wrap_Filter> supportedFilters = new List<Wrap_Filter>();
         public WriteableBitmap Image = null;
+        public Preview tempPreview = null;
         /// <summary>
         /// Constructor for the Application object.
         /// </summary>
@@ -68,27 +70,26 @@ namespace FilterMage
         // This code will not execute when the application is reactivated
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
-            supportedFilters.Add("Antique", new AntiqueFilter());
-            supportedFilters.Add("Blur", new BlurFilter(new BlurFilterProperty().KernelSize));
-            supportedFilters.Add("Cartoon", new CartoonFilter(new CartoonFilterProperty().DistinctEdges));
-            supportedFilters.Add("Color Boost", new ColorBoostFilter(new ColorBoostFilterProperty().Gain));
-            supportedFilters.Add("Color Swap", new ColorSwapFilter());
-            supportedFilters.Add("Contrast", new ContrastFilter(new ContrastFilterProperty().ContrastLevel));
-            supportedFilters.Add("Curves", new CurvesFilter());
-            supportedFilters.Add("Despeckle", new DespeckleFilter(new DespeckleFilterProperty().DespeckleLevel));
-            supportedFilters.Add("Emboss", new EmbossFilter(new EmbossFilterProperty().Level));
-            supportedFilters.Add("Flip", new FlipFilter(new FlipFilterProperty().FlipMode));
-            supportedFilters.Add("Fog", new FogFilter());
-            supportedFilters.Add("Grayscale", new GrayscaleFilter());
-            supportedFilters.Add("Grayscale Negative", new GrayscaleNegativeFilter());
-
-            filterProperties.Add("Blur", new BlurFilterProperty());
-            filterProperties.Add("Cartoon", new CartoonFilterProperty());
-            filterProperties.Add("Color Boost", new ColorBoostFilterProperty());
-            filterProperties.Add("Contrast", new ContrastFilterProperty());
-            filterProperties.Add("Despeckle", new DespeckleFilterProperty());
-            filterProperties.Add("Emboss", new EmbossFilterProperty());
-            filterProperties.Add("Flip", new FlipFilterProperty());
+            supportedFilters.Add(new Wrap_AntiqueFilter());
+            supportedFilters.Add(new Wrap_AutoEnhanceFilter());
+            supportedFilters.Add(new Wrap_BlurFilter());
+            supportedFilters.Add(new Wrap_BrightnessFilter());
+            supportedFilters.Add(new Wrap_CartoonFilter());
+            supportedFilters.Add(new Wrap_ColorBoostFilter());
+            supportedFilters.Add(new Wrap_ContrastFilter());
+            supportedFilters.Add(new Wrap_DespeckleFilter());
+            supportedFilters.Add(new Wrap_EmbossFilter());
+            supportedFilters.Add(new Wrap_ExposureFilter());
+            supportedFilters.Add(new Wrap_FlipFilter());
+            supportedFilters.Add(new Wrap_FogFilter());
+            supportedFilters.Add(new Wrap_GrayscaleFilter());
+            supportedFilters.Add(new Wrap_GrayscaleNegativeFilter());
+            supportedFilters.Add(new Wrap_LomoFilter());
+            supportedFilters.Add(new Wrap_MagicPenFilter());
+            supportedFilters.Add(new Wrap_MirrorFilter());
+            supportedFilters.Add(new Wrap_MoonlightFilter());
+            supportedFilters.Add(new Wrap_TemperatureAndTintFilter());
+            supportedFilters.Add(new Wrap_WatercolorFilter());
         }
 
         // Code to execute when the application is activated (brought to foreground)

@@ -10,13 +10,15 @@ using Microsoft.Phone.Shell;
 using FilterMage.ViewModels;
 using Nokia.Graphics.Imaging;
 using System.Reflection;
+using FilterMage.Models;
+using System.Collections.ObjectModel;
 
 namespace FilterMage
 {
     public partial class FineTuneFilter : PhoneApplicationPage
     {
-        private Preview preview;
-        private FilterThumbnail thumb;
+        private Preview preview = null;
+        private Wrap_Filter wFilter = null;
         public FineTuneFilter()
         {
             InitializeComponent();
@@ -25,30 +27,31 @@ namespace FilterMage
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            preview = (Preview)PhoneApplicationService.Current.State["preview"];
-            thumb = (FilterThumbnail)PhoneApplicationService.Current.State["latestThumb"];
+            preview = (App.Current as App).tempPreview;
+            wFilter = preview.GetLastFilter();
+            List_BoolProps.DataContext = wFilter.BoolProperties;
+            List_RangeProps.DataContext = wFilter.RangeProperties;
+            List_EnumProps.DataContext = wFilter.EnumProperties;
+            wFilter.FilterRefreshed += filter_FilterRefreshed;
             Image_PreviewImage.Source = preview.previewImage;
-            CreateFineTuneControls(thumb.GetFilterProperties());
         }
 
-        private void CreateFineTuneControls(PropertyInfo[] props)
+        private async void filter_FilterRefreshed()
         {
-            foreach (PropertyInfo prop in props)
-            {
-                StackPanel Stack = new StackPanel();
-                TextBlock label = new TextBlock();
-                label.Text = prop.Name;
-                Stack.Children.Add(label);
-                Stack_FineControls.Children.Add(Stack);
-                switch (prop.PropertyType.ToString())
-                {
-                    case "System.Boolean":
-                        ToggleSwitch tSwitch = new ToggleSwitch();
-                        tSwitch.Name = prop.Name;
-                        Stack.Children.Add(tSwitch);
-                        break;
-                }
-            }
+            await preview.UndoLastFilter();
+            Image_PreviewImage.Source = await preview.ApplyFilter(wFilter);
+        }
+
+        private void AppBarBut_Proceed_Click(object sender, EventArgs e)
+        {
+            NavigationService.GoBack();
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            PhoneApplicationService.Current.State["RefreshThumbs"] = null;
+            wFilter.FilterRefreshed -= filter_FilterRefreshed;
+            base.OnNavigatedFrom(e);
         }
     }
 }
