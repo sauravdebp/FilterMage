@@ -54,6 +54,10 @@ namespace FilterMage
                                 {
                                     but.IsEnabled = true;
                                 }
+                                else if(PageState == States.FILTER_APPLIED)
+                                {
+                                    but.IsEnabled = false;
+                                }
                             }
                             break;
 
@@ -67,7 +71,6 @@ namespace FilterMage
                 }
             }
         }
-     
         // Constructor
         public MainPage()
         {
@@ -75,6 +78,7 @@ namespace FilterMage
             filterThumbnails = new ObservableCollection<FilterThumbnail>();
             List_Thumbnails.DataContext = filterThumbnails;
             Image_PreviewImage.DataContext = preview;
+            
             PageState = States.INITIAL;
         }
         
@@ -92,8 +96,9 @@ namespace FilterMage
             
             chosenPhoto = e.ChosenPhoto;
             preview = new Preview(e.ChosenPhoto, previewWidth, previewHeight);
-            Image_PreviewImage.Source = preview.previewImage;
             
+            Image_PreviewImage.Source = preview.previewImage;
+            Grid_MemoryAid.DataContext = preview;
             SelectImage.Visibility = System.Windows.Visibility.Collapsed;
 
             WriteableBitmap chosenImage = new WriteableBitmap(thumbnailHeight, thumbnailHeight);
@@ -142,15 +147,6 @@ namespace FilterMage
         private async void AppBarBut_Undo_Click(object sender, EventArgs e)
         {
             (sender as ApplicationBarIconButton).IsEnabled = false;
-            Wrap_Filter lastFilter = preview.GetLastFilter();
-            if (!lastFilter.isEditable())
-            {
-                PageState = States.FILTER_APPLIED;
-            }
-            else
-            {
-                PageState = States.EDITABLE_FILTER_APPLIED;
-            }
             Image_PreviewImage.Source = await preview.UndoLastFilter();
             WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
             addFilterThumbnails(thumbImg);
@@ -159,12 +155,24 @@ namespace FilterMage
             {
                 PageState = States.IMAGE_LOADED;
             }
+            else
+            {
+                Wrap_Filter lastFilter = preview.GetLastFilter();
+                if (!lastFilter.isEditable())
+                {
+                    PageState = States.FILTER_APPLIED;
+                }
+                else
+                {
+                    PageState = States.EDITABLE_FILTER_APPLIED;
+                }
+            }
         }
 
-        private async void AppBarBut_Proceed_Click(object sender, EventArgs e)
+        private void AppBarBut_Proceed_Click(object sender, EventArgs e)
         {
             (sender as ApplicationBarIconButton).IsEnabled = false;
-            (App.Current as App).Image = await preview.CreateFullResPreview();
+            (App.Current as App).tempPreview = preview;
             NavigationService.Navigate(new Uri("/Proceed.xaml", UriKind.Relative));
             (sender as ApplicationBarIconButton).IsEnabled = true;
         }

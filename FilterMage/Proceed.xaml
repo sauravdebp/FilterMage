@@ -22,15 +22,26 @@
 
         <!--TitlePanel contains the name of the application and page title-->
         <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="#FFFFFFAC" Margin="0, 0, 0, 3">
-            <TextBlock Text="{Binding Path=LocalizedResources.ApplicationTitle, 
+            <Grid>
+                <TextBlock Text="{Binding Path=LocalizedResources.ApplicationTitle, 
                                         Source={StaticResource LocalizedStrings}}"
                        Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12,0"
                        Foreground="#FF11395B"/>
+                <TextBlock Text="Save n Share" 
+                           Style="{StaticResource PhoneTextNormalStyle}"
+                           HorizontalAlignment="Right" Foreground="#FFBBCFBE"/>
+            </Grid>
         </StackPanel>
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <Image Name="Image_FullImage"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+            <ProgressBar Grid.Row="1" Name="Progress_Rendering" IsIndeterminate="True" />
+            <Image Grid.Row="0" Name="Image_FullImage" VerticalAlignment="Center"/>
+            <TextBlock Grid.Row="1" Height="Auto" Name="Text_Resolution" VerticalAlignment="Bottom" />
         </Grid>
     </Grid>
 

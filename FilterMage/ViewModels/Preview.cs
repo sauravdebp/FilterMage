@@ -40,6 +40,16 @@ namespace FilterMage.ViewModels
                 NotifyPropertyChanged("noofFilters");
             }
         }
+        
+        public string LastFilter
+        {
+            get
+            {
+                if (activeFilters.Count > 0)
+                    return GetLastFilter().filterName;
+                return "No filter applied";
+            }
+        }
 
         private List<Wrap_Filter> activeFilters = null;
 
@@ -86,6 +96,7 @@ namespace FilterMage.ViewModels
             prevPreviews.Add(previewImage);
             List<IFilter> filters = new List<IFilter>();
             filters.Add(filter.filter);
+            NotifyPropertyChanged("LastFilter");
             return await ApplyFilters(filters);
         }
 
@@ -110,12 +121,15 @@ namespace FilterMage.ViewModels
                 }
                 await ApplyFilters(filters);
             }
+            NotifyPropertyChanged("LastFilter");
             return previewImage;
         }
 
         public Wrap_Filter GetLastFilter()
         {
-            return activeFilters.Last();
+            if(activeFilters.Count > 0)
+                return activeFilters.Last();
+            return null;
         }
 
         public WriteableBitmap ClearAllFilters()
@@ -131,22 +145,26 @@ namespace FilterMage.ViewModels
             {
                 MessageBox.Show(ex.Message + " in Preview.cs ClearAllFilters()");
             }
+            NotifyPropertyChanged("LastFilter");
             return previewImage;
         }
 
         public async Task<WriteableBitmap> CreateFullResPreview()
         {
-            WriteableBitmap source = new WriteableBitmap(0, 0);
-            source.SetSource(originalImage);
-            List<IFilter> filters = new List<IFilter>();
-            foreach (Wrap_Filter wFilter in activeFilters)
+            WriteableBitmap original = new WriteableBitmap(0, 0);
+            original.SetSource(originalImage);
+            WriteableBitmap source = new WriteableBitmap(original);
+            WriteableBitmap dest = new WriteableBitmap(source.PixelWidth, source.PixelHeight);
+            foreach (Wrap_Filter w_filter in activeFilters)
             {
-                filters.Add(wFilter.filter);
+                Effect eff = new Effect(w_filter.filter);
+                await eff.ApplyEffect(source, dest);
+                source = null;
+                source = new WriteableBitmap(dest);
+                dest = null;
+                dest = new WriteableBitmap(source.PixelWidth, source.PixelHeight);
             }
-            Effect eff = new Effect(filters);
-            WriteableBitmap fullRes = new WriteableBitmap(source.PixelWidth, source.PixelHeight);
-            fullRes = await eff.ApplyEffect(source, fullRes);
-            return fullRes;
+            return source;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
