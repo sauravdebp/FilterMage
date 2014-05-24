@@ -1,31 +1,27 @@
-﻿using FilterMage.ViewModels;
+﻿using FilterMage.Models;
+using FilterMage.ViewModels;
 using Microsoft.Phone.Controls;
+using Microsoft.Phone.Shell;
 using Microsoft.Phone.Tasks;
-using Nokia.Graphics.Imaging;
+using Microsoft.Xna.Framework.Media;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.IsolatedStorage;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using FilterMage.Models;
-using Microsoft.Phone.Shell;
-using FilterMage.Resources;
-using Microsoft.Xna.Framework.Media;
-using System.Windows.Data;
 
 namespace FilterMage
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        Stream chosenPhoto;
-        private int thumbnailHeight = 200;
+        Stream chosenPhoto = null;
         private int previewWidth = 0;
         private int previewHeight = 0;
         public Preview preview = null;
         public ObservableCollection<FilterThumbnail> filterThumbnails = null;
-        private enum States { INITIAL, IMAGE_LOADED, FILTER_APPLIED, EDITABLE_FILTER_APPLIED };
+        private enum States { INITIAL, IMAGE_LOADED, THUMB_LOADED, FILTER_APPLIED, EDITABLE_FILTER_APPLIED, OPENED_VIA_EDIT };
         private States _PageState;
         private States PageState
         {
@@ -77,9 +73,32 @@ namespace FilterMage
             InitializeComponent();
             filterThumbnails = new ObservableCollection<FilterThumbnail>();
             List_Thumbnails.DataContext = filterThumbnails;
-            Image_PreviewImage.DataContext = preview;
-            
             PageState = States.INITIAL;
+            Settings();
+        }
+
+        private bool canSkipTutorial()
+        {
+            IsolatedStorageSettings settings = IsolatedStorageSettings.ApplicationSettings;
+            if (settings.Contains("tutorialSkip") && (bool)settings["tutorialSkip"] == true)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private void Settings()
+        {
+            IsolatedStorageSettings settings = IsolatedStorageSettings.ApplicationSettings;
+            if (settings.Contains("thumbHeight"))
+            {
+                (App.Current as App).thumbnailHeight = (int)settings["thumbHeight"];
+            }
+            else
+            {
+                settings.Add("thumbHeight", (App.Current as App).thumbnailHeight);
+                settings.Save();
+            }
         }
         
         private void SelectImage_Tap(object sender, System.Windows.Input.GestureEventArgs e)
@@ -95,24 +114,64 @@ namespace FilterMage
                 return;
             
             chosenPhoto = e.ChosenPhoto;
-            preview = new Preview(e.ChosenPhoto, previewWidth, previewHeight);
-            
-            Image_PreviewImage.Source = preview.previewImage;
+            if (PageState == States.INITIAL)
+                Grid_Preview.Tap -= SelectImage_Tap;
+            loadChosenPhotoThumbs();
+        }
+
+        private void loadChosenPhotoThumbs()
+        {
+            WriteableBitmap chosenImage = new WriteableBitmap((App.Current as App).thumbnailHeight, (App.Current as App).thumbnailHeight);
+            chosenImage.SetSource(chosenPhoto);
+            chosenPhoto.Position = 0;
+            addFilterThumbnails(chosenImage);
+            if (PageState == States.INITIAL || PageState == States.OPENED_VIA_EDIT)
+                PageState = States.THUMB_LOADED;
+            else
+                loadPreview();
+        }
+
+        private void loadPreview()
+        {
+            preview = new Preview(chosenPhoto, previewWidth, previewHeight);
+            (App.Current as App).preview = preview;
+            Image_PreviewImage.Source = preview.OriginalPreview;
             Grid_MemoryAid.DataContext = preview;
             SelectImage.Visibility = System.Windows.Visibility.Collapsed;
 
-            WriteableBitmap chosenImage = new WriteableBitmap(thumbnailHeight, thumbnailHeight);
-            chosenImage.SetSource(e.ChosenPhoto);
-            addFilterThumbnails(chosenImage);
-            
             PageState = States.IMAGE_LOADED;
+        }
+
+        private void Grid_Preview_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (PageState == States.THUMB_LOADED)
+            {
+                SetPreviewAreaDim();
+                loadPreview();
+            }
+            else if (PageState == States.OPENED_VIA_EDIT)
+            {
+                SetPreviewAreaDim();
+                loadPreview();
+            }
+        }
+
+        private void SetPreviewAreaDim()
+        {
+            previewWidth = (int)Grid_Preview.ActualWidth;
+            previewHeight = (int)Grid_Preview.ActualHeight;
+            if (PageState == States.OPENED_VIA_EDIT)
+            {
+                loadChosenPhotoThumbs();
+                Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
+            }
         }
 
         private void addFilterThumbnails(WriteableBitmap image)
         {
             try
             {
-                Resolution dim = new Resolution(image.PixelWidth, image.PixelHeight, thumbnailHeight, fixedDim.HEIGHT);
+                Resolution dim = new Resolution(image.PixelWidth, image.PixelHeight, (App.Current as App).thumbnailHeight, fixedDim.HEIGHT);
                 image = image.Resize(dim.width, dim.height, WriteableBitmapExtensions.Interpolation.Bilinear);
                 var filters = (App.Current as App).supportedFilters;
                 filterThumbnails.Clear();
@@ -129,29 +188,31 @@ namespace FilterMage
 
         private async void Image_Tap(object sender, System.Windows.Input.GestureEventArgs e)
         {
+            Progress_Rendering.Visibility = System.Windows.Visibility.Visible;
             Image img = sender as Image;
             FilterThumbnail selectedThumb = (FilterThumbnail)img.DataContext;
             Image_PreviewImage.Source = await preview.ApplyFilter(selectedThumb.wrapFilter);
             WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
             addFilterThumbnails(thumbImg);
-            if (preview.noofFilters > 0)
+            if (preview.NoofFilters > 0)
             {
                 if (selectedThumb.wrapFilter.isEditable())
                     PageState = States.EDITABLE_FILTER_APPLIED;
                 else
                     PageState = States.FILTER_APPLIED;
             }
-            //setThumbAngle();
+            Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         private async void AppBarBut_Undo_Click(object sender, EventArgs e)
         {
+            Progress_Rendering.Visibility = System.Windows.Visibility.Visible;
             (sender as ApplicationBarIconButton).IsEnabled = false;
             Image_PreviewImage.Source = await preview.UndoLastFilter();
             WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
             addFilterThumbnails(thumbImg);
             (sender as ApplicationBarIconButton).IsEnabled = true;
-            if (preview.noofFilters == 0)
+            if (preview.NoofFilters == 0)
             {
                 PageState = States.IMAGE_LOADED;
             }
@@ -167,74 +228,91 @@ namespace FilterMage
                     PageState = States.EDITABLE_FILTER_APPLIED;
                 }
             }
+            Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         private void AppBarBut_Proceed_Click(object sender, EventArgs e)
         {
-            (sender as ApplicationBarIconButton).IsEnabled = false;
-            (App.Current as App).tempPreview = preview;
+            (sender as ApplicationBarIconButton).IsEnabled = false;            
             NavigationService.Navigate(new Uri("/Proceed.xaml", UriKind.Relative));
             (sender as ApplicationBarIconButton).IsEnabled = true;
         }
 
-        private void AppBarBut_Clear_Click(object sender, EventArgs e)
+        private async void AppBarBut_Clear_Click(object sender, EventArgs e)
         {
+            Progress_Rendering.Visibility = System.Windows.Visibility.Visible;
             (sender as ApplicationBarIconButton).IsEnabled = false;
-            Image_PreviewImage.Source = preview.ClearAllFilters();
-            WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
+            Image_PreviewImage.Source = await preview.ClearAllFilters();
+            WriteableBitmap thumbImg = new WriteableBitmap(preview.OriginalPreview);
             addFilterThumbnails(thumbImg);
             (sender as ApplicationBarIconButton).IsEnabled = true;
             PageState = States.IMAGE_LOADED;
-        }
-        
-        private void Grid_Preview_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (previewWidth == 0 && previewHeight == 0)
-            {
-                previewWidth = (int)Grid_Preview.ActualWidth;
-                previewHeight = (int)Grid_Preview.ActualHeight;
-            }
+            Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         private void AppBarBut_Edit_Click(object sender, EventArgs e)
         {
-            (App.Current as App).tempPreview = preview;
             NavigationService.Navigate(new Uri("/FineTuneFilter.xaml", UriKind.Relative));
         }
         
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            if (!canSkipTutorial())
+            {
+                NavigationService.Navigate(new Uri("/Tutorial.xaml", UriKind.Relative));
+                NavigationService.RemoveBackEntry();
+            }
             if(PhoneApplicationService.Current.State.ContainsKey("RefreshThumbs"))
             {
                 PhoneApplicationService.Current.State.Clear();
+                if (preview == null)
+                    return;
                 Image_PreviewImage.Source = preview.previewImage;
                 WriteableBitmap thumbImg = new WriteableBitmap(preview.previewImage);
                 addFilterThumbnails(thumbImg);
             }
+            else if (NavigationContext.QueryString.ContainsKey("FileId"))
+            {
+                MediaLibrary library = new MediaLibrary();
+                Picture photo = library.GetPictureFromToken(NavigationContext.QueryString["FileId"]);
+                chosenPhoto = photo.GetImage();
+                library.Dispose();
+                photo.Dispose();
+                SelectImage.Visibility = System.Windows.Visibility.Collapsed;
+                PageState = States.OPENED_VIA_EDIT;
+                Grid_Preview.Tap -= SelectImage_Tap;
+                NavigationContext.QueryString.Clear();
+                loadChosenPhotoThumbs();
+            }
         }
 
-        /*protected override void OnOrientationChanged(OrientationChangedEventArgs e)
+        private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
         {
-            if (e.Orientation == PageOrientation.LandscapeLeft)
-            {
-                Anim_RotatePreview.To = 90;
-            }
-            else if (e.Orientation == PageOrientation.PortraitUp)
-            {
-                Anim_RotatePreview.To = 0;
-            }
-            Story_RotateGrid.Begin();
-            setThumbAngle();
-            //base.OnOrientationChanged(e);
+            NavigationService.Navigate(new Uri("/About_Settings.xaml", UriKind.Relative));
+            
         }
 
-        private void setThumbAngle()
+        private async void Image_PreviewImage_DoubleTap(object sender, System.Windows.Input.GestureEventArgs e)
         {
-            foreach (FilterThumbnail thumb in filterThumbnails)
+            Progress_Rendering.Visibility = System.Windows.Visibility.Visible;
+            if (await preview.TogglePreviewRes() == Preview.SCALE.FIT_SCREEN)
             {
-                thumb.rotateAngle = (int)Anim_RotatePreview.To;
+                Scroll_PreviewImage.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+                Scroll_PreviewImage.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
             }
-        }*/
+            else
+            {
+                Scroll_PreviewImage.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+                Scroll_PreviewImage.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            }
+            Image_PreviewImage.Source = preview.previewImage;
+            Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
+        }
+
+        private void AppBar_SelectNewImage_Click(object sender, EventArgs e)
+        {
+            SelectImage_Tap(sender, new System.Windows.Input.GestureEventArgs());
+        }
     }
 }

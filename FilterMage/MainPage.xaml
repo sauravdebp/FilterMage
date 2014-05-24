@@ -24,22 +24,22 @@
                 Storyboard.TargetName="Grid_Preview"/>
         </Storyboard-->
     </phone:PhoneApplicationPage.Resources>
-    
+
     <!--LayoutRoot is the root grid where all page content is placed-->
-    <Grid x:Name="LayoutRoot" Background="Transparent">
+    <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="#FFFFFFAC" Margin="0, 0, 0, 3">
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="0, 0, 0, 3">
             <Grid>
                 <TextBlock Text="{Binding Path=LocalizedResources.ApplicationTitle, 
                                         Source={StaticResource LocalizedStrings}}"
                        Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12,0"
-                       Foreground="#FF11395B"/>
+                       FontSize="20"/>
                 <TextBlock Text="Add Filters" 
                            Style="{StaticResource PhoneTextNormalStyle}"
                            HorizontalAlignment="Right" Foreground="#FFBBCFBE"/>
@@ -51,29 +51,42 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-            
-            <Grid Grid.Row="0" Name="Grid_Preview" Tap="SelectImage_Tap" Height="auto" Width="auto"
-                  RenderTransformOrigin=".5, .5" Loaded="Grid_Preview_Loaded">
+
+            <Grid Grid.Row="0"  Name="Grid_Preview" 
+                  Tap="SelectImage_Tap" Height="auto" Width="auto"
+                  RenderTransformOrigin=".5, .5" SizeChanged="Grid_Preview_SizeChanged">
                 <Grid.RenderTransform>
                     <CompositeTransform />
                 </Grid.RenderTransform>
+
                 <TextBlock Name="SelectImage"
                            Text="Tap to select image" 
                            Style="{StaticResource PhoneTextLargeStyle}"
-                           HorizontalAlignment="Center" 
-                           VerticalAlignment="Center"/>
-                <Image Name="Image_PreviewImage"/>
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                            />
+                <ScrollViewer Name="Scroll_PreviewImage" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <Image Name="Image_PreviewImage" 
+                           Stretch="None" 
+                           DoubleTap="Image_PreviewImage_DoubleTap"/>
+                </ScrollViewer>
             </Grid>
-            
-            <Grid Name="Grid_temp" Grid.Row="1" Margin="0 5 0 0">
+            <ProgressBar Name="Progress_Rendering" 
+                         Grid.Row="1"
+                         VerticalAlignment="Bottom" 
+                         IsIndeterminate="True" 
+                         Visibility="Collapsed"/>
+            <Grid Name="Grid_temp" Grid.Row="2" Margin="0 5 0 0">
                 <Grid.RowDefinitions>
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid Name="Grid_MemoryAid" Grid.Row="0">
                     <TextBlock Text="{Binding LastFilter}" />
-                    <TextBlock Text="{Binding noofFilters}" HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding NoofFilters}" HorizontalAlignment="Right" />
                 </Grid>
                 <ScrollViewer VerticalAlignment="Center" HorizontalScrollBarVisibility="Hidden"
                               Grid.Row="1"
@@ -87,12 +100,12 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel MinWidth="140" Margin="5,0,0,0">
+                                <StackPanel MinWidth="140" Margin="5,0,0,0" Background="{x:Null}">
                                     <!--StackPanel.RenderTransform>
                                         <RotateTransform Angle="{Binding rotateAngle}" CenterX=".5" CenterY=".5" />
                                     </StackPanel.RenderTransform-->
                                     <Grid>
-                                        <Image HorizontalAlignment="Left" 
+                                        <Image HorizontalAlignment="Center" 
                                            Tap="Image_Tap" 
                                            Source="{Binding thumbnailImg}"></Image>
                                         <!--Image VerticalAlignment="Top"
@@ -100,7 +113,7 @@
                                                Source="/Assets/overflowdots.png"/-->
                                     </Grid>
                                     <TextBlock Text="{Binding filterName}" VerticalAlignment="Bottom"
-                                               HorizontalAlignment="Left"></TextBlock>
+                                               HorizontalAlignment="Center"></TextBlock>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -139,7 +152,14 @@
                                             IconUri="/Assets/AppBar/check.png" 
                                             Text="proceed"
                                             IsEnabled="False"/>
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem x:Name="AppBar_SelectNewImage"
+                                              Click="AppBar_SelectNewImage_Click"
+                                              Text="select new image"/>
+                <shell:ApplicationBarMenuItem Click="ApplicationBarMenuItem_Click"
+                                              Text="About + Settings"/>
+            </shell:ApplicationBar.MenuItems>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
-    
+
 </phone:PhoneApplicationPage>

@@ -22,13 +22,13 @@
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="#FFFFFFAC" Margin="0, 0, 0, 3">
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="0, 0, 0, 3">
             <Grid>
                 <TextBlock Text="{Binding Path=LocalizedResources.ApplicationTitle, 
                                         Source={StaticResource LocalizedStrings}}"
                        Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12,0"
-                       Foreground="#FF11395B"/>
+                       FontSize="20"/>
                 <TextBlock Text="Fine Tune Filter" 
                            Style="{StaticResource PhoneTextNormalStyle}"
                            HorizontalAlignment="Right" Foreground="#FFBBCFBE"/>
@@ -116,6 +116,10 @@
                                             Click="AppBarBut_Proceed_Click" 
                                             IconUri="/Assets/AppBar/check.png" 
                                             Text="Proceed"/>
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem Click="ApplicationBarMenuItem_Click"
+                                              Text="About + Settings"/>
+            </shell:ApplicationBar.MenuItems>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
 

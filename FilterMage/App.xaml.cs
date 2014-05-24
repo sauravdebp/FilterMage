@@ -1,17 +1,15 @@
-﻿using System;
-using System.Diagnostics;
-using System.Resources;
-using System.Windows;
-using System.Windows.Markup;
-using System.Windows.Navigation;
+﻿using FilterMage.Models;
+using FilterMage.Resources;
+using FilterMage.ViewModels;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
-using FilterMage.Resources;
+using System;
 using System.Collections.Generic;
-using Nokia.Graphics.Imaging;
-using FilterMage.ViewModels;
-using FilterMage.Models;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Markup;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 
 namespace FilterMage
 {
@@ -22,11 +20,11 @@ namespace FilterMage
         /// </summary>
         /// <returns>The root frame of the Phone Application.</returns>
         public static PhoneApplicationFrame RootFrame { get; private set; }
-        //public Dictionary<String, IFilter> supportedFilters = new Dictionary<string, IFilter>();
-        //public Dictionary<string, Im_Filter> filterProperties = new Dictionary<string, Im_Filter>();
         public List<Wrap_Filter> supportedFilters = new List<Wrap_Filter>();
         public WriteableBitmap Image = null;
-        public Preview tempPreview = null;
+        //public Preview tempPreview = null;
+        public Preview preview = null;
+        public int thumbnailHeight = 160;
         /// <summary>
         /// Constructor for the Application object.
         /// </summary>
@@ -63,7 +61,7 @@ namespace FilterMage
                 // and consume battery power when the user is not using the phone.
                 PhoneApplicationService.Current.UserIdleDetectionMode = IdleDetectionMode.Disabled;
             }
-
+            //Utilities.BeginRecording();
         }
 
         // Code to execute when the application is launching (eg, from Start)
@@ -71,25 +69,36 @@ namespace FilterMage
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
             supportedFilters.Add(new Wrap_AntiqueFilter());
-            supportedFilters.Add(new Wrap_AutoEnhanceFilter());
+            //supportedFilters.Add(new Wrap_AutoEnhanceFilter());
             supportedFilters.Add(new Wrap_BlurFilter());
             supportedFilters.Add(new Wrap_BrightnessFilter());
             supportedFilters.Add(new Wrap_CartoonFilter());
             supportedFilters.Add(new Wrap_ColorBoostFilter());
             supportedFilters.Add(new Wrap_ContrastFilter());
             supportedFilters.Add(new Wrap_DespeckleFilter());
-            supportedFilters.Add(new Wrap_EmbossFilter());
+            //supportedFilters.Add(new Wrap_EmbossFilter());
             supportedFilters.Add(new Wrap_ExposureFilter());
             supportedFilters.Add(new Wrap_FlipFilter());
             supportedFilters.Add(new Wrap_FogFilter());
             supportedFilters.Add(new Wrap_GrayscaleFilter());
-            supportedFilters.Add(new Wrap_GrayscaleNegativeFilter());
+            //supportedFilters.Add(new Wrap_GrayscaleNegativeFilter());
             supportedFilters.Add(new Wrap_LomoFilter());
             supportedFilters.Add(new Wrap_MagicPenFilter());
+            supportedFilters.Add(new Wrap_MilkyFilter());
             supportedFilters.Add(new Wrap_MirrorFilter());
             supportedFilters.Add(new Wrap_MoonlightFilter());
+            supportedFilters.Add(new Wrap_NegativeFilter());
+            //supportedFilters.Add(new Wrap_OilyFilter());
+            supportedFilters.Add(new Wrap_PaintFilter());
+            supportedFilters.Add(new Wrap_SepiaFilter());
+            supportedFilters.Add(new Wrap_SharpnessFilter());
+            supportedFilters.Add(new Wrap_SketchFilter());
+            supportedFilters.Add(new Wrap_SolarizeFilter());
+            supportedFilters.Add(new Wrap_StampFilter());
             supportedFilters.Add(new Wrap_TemperatureAndTintFilter());
             supportedFilters.Add(new Wrap_WatercolorFilter());
+            supportedFilters.Add(new Wrap_WhiteboardEnhancementFilter());
+            
         }
 
         // Code to execute when the application is activated (brought to foreground)
@@ -126,6 +135,7 @@ namespace FilterMage
             if (Debugger.IsAttached)
             {
                 // An unhandled exception has occurred; break into the debugger
+                MessageBox.Show(e.ExceptionObject.Message);
                 Debugger.Break();
             }
         }

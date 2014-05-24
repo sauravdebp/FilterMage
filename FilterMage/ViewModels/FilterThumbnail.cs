@@ -1,16 +1,15 @@
-﻿using Nokia.Graphics.Imaging;
+﻿using FilterMage.Models;
 using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using FilterMage.Models;
-using System.Reflection;
 
 namespace FilterMage.ViewModels
 {
     public class FilterThumbnail : INotifyPropertyChanged
     {
-        //public Effect effect = null;
+        private Effect effect = null;
+        private WriteableBitmap originalImage = null;
         public Wrap_Filter wrapFilter = null;
 
         public int thumbHeight;
@@ -51,21 +50,21 @@ namespace FilterMage.ViewModels
 
         public FilterThumbnail(Wrap_Filter filter, WriteableBitmap originalImage)
         {
-            //effect = new Effect(filter.filter);
+            effect = new Effect(filter.filter);
             this.wrapFilter = filter;
             this.filterName = filter.filterName;
             this.thumbWidth = originalImage.PixelWidth;
             this.thumbHeight = originalImage.PixelHeight;
-            ApplyEffect(originalImage);
+            this.originalImage = originalImage;
+            thumbnailImg = new WriteableBitmap(thumbWidth, thumbHeight);
+            ApplyEffect();
         }
 
-        private async void ApplyEffect(WriteableBitmap sourceImg)
+        private async void ApplyEffect()
         {
             try
             {
-                Effect effect = new Effect(wrapFilter.filter);
-                thumbnailImg = new WriteableBitmap(thumbWidth, thumbHeight);
-                thumbnailImg = await effect.ApplyEffect(sourceImg, thumbnailImg);
+                thumbnailImg = await effect.ApplyEffect(originalImage, thumbnailImg);
             }
             catch (Exception e)
             {

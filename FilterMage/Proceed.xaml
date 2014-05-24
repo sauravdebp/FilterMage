@@ -21,13 +21,13 @@
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="#FFFFFFAC" Margin="0, 0, 0, 3">
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="0, 0, 0, 3">
             <Grid>
                 <TextBlock Text="{Binding Path=LocalizedResources.ApplicationTitle, 
                                         Source={StaticResource LocalizedStrings}}"
                        Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12,0"
-                       Foreground="#FF11395B"/>
+                       FontSize="20"/>
                 <TextBlock Text="Save n Share" 
                            Style="{StaticResource PhoneTextNormalStyle}"
                            HorizontalAlignment="Right" Foreground="#FFBBCFBE"/>
@@ -36,7 +36,7 @@
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="*" />
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
             <ProgressBar Grid.Row="1" Name="Progress_Rendering" IsIndeterminate="True" />
@@ -55,6 +55,10 @@
                                             Click="AppBarBut_Share_Click"
                                             IconUri="/Assets/AppBar/share.png" 
                                             Text="share"/>
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem Click="ApplicationBarMenuItem_Click"
+                                              Text="About + Settings"/>
+            </shell:ApplicationBar.MenuItems>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
 

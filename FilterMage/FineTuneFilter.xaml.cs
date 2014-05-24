@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
+﻿using FilterMage.Models;
+using FilterMage.ViewModels;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
-using FilterMage.ViewModels;
-using Nokia.Graphics.Imaging;
-using System.Reflection;
-using FilterMage.Models;
-using System.Collections.ObjectModel;
+using System;
+using System.Diagnostics;
+using System.Windows.Navigation;
 
 namespace FilterMage
 {
@@ -27,7 +20,7 @@ namespace FilterMage
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            preview = (App.Current as App).tempPreview;
+            preview = (App.Current as App).preview;
             wFilter = preview.GetLastFilter();
             List_BoolProps.DataContext = wFilter.BoolProperties;
             List_RangeProps.DataContext = wFilter.RangeProperties;
@@ -38,8 +31,11 @@ namespace FilterMage
 
         private async void filter_FilterRefreshed()
         {
+            Debug.WriteLine("FilterRefreshed()");
+            //wFilter.FilterRefreshed -= filter_FilterRefreshed;
             await preview.UndoLastFilter();
             Image_PreviewImage.Source = await preview.ApplyFilter(wFilter);
+            //wFilter.FilterRefreshed += filter_FilterRefreshed;
         }
 
         private void AppBarBut_Proceed_Click(object sender, EventArgs e)
@@ -52,6 +48,11 @@ namespace FilterMage
             PhoneApplicationService.Current.State["RefreshThumbs"] = null;
             wFilter.FilterRefreshed -= filter_FilterRefreshed;
             base.OnNavigatedFrom(e);
+        }
+
+        private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/About_Settings.xaml", UriKind.Relative));
         }
     }
 }

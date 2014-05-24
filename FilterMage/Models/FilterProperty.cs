@@ -1,11 +1,8 @@
-﻿using FilterMage.ViewModels;
-using Nokia.Graphics.Imaging;
+﻿using Nokia.Graphics.Imaging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using System.Windows;
 
 namespace FilterMage.Models
@@ -46,7 +43,14 @@ namespace FilterMage.Models
             PropertyChangedEventHandler handler = PropertyChanged;
             if (null != handler)
             {
-                handler(this, new PropertyChangedEventArgs(propertyName));
+                if ((App.Current as App).preview.Effect.canProceed())
+                {
+                    handler(this, new PropertyChangedEventArgs(propertyName));
+                    /*if (!(App.Current as App).preview.Effect.renderFinished())
+                    {
+                        handler(this, new PropertyChangedEventArgs(propertyName));
+                    }*/
+                }
             }
         }
     }
@@ -212,6 +216,7 @@ namespace FilterMage.Models
         {
             if (e.PropertyName == "Value")
             {
+                Debug.WriteLine("PropertyChanged");
                 try
                 {
                     (filter as BlurFilter).KernelSize = (int)KernelSize.Value;
@@ -289,7 +294,7 @@ namespace FilterMage.Models
         public Wrap_ColorBoostFilter()
         {
             filterName = "Color Boost";
-            Gain = new RangeProperty("Gain", 10, 20, -1);
+            Gain = new RangeProperty("Gain", 6, 20, -1);
             Gain.PropertyChanged += Gain_PropertyChanged;
             filter = new ColorBoostFilter(Gain.Value);
             RangeProperties.Add(Gain);
@@ -620,6 +625,15 @@ namespace FilterMage.Models
         }
     }
 
+    public class Wrap_MilkyFilter : Wrap_Filter
+    {
+        public Wrap_MilkyFilter()
+        {
+            filterName = "Milky";
+            filter = new MilkyFilter();
+        }
+    }
+
     public class Wrap_MirrorFilter : Wrap_Filter
     {
         public Wrap_MirrorFilter()
@@ -651,6 +665,229 @@ namespace FilterMage.Models
         }
     }
 
+    public class Wrap_NegativeFilter : Wrap_Filter
+    {
+        public Wrap_NegativeFilter()
+        {
+            filterName = "Negate";
+            filter = new NegativeFilter();
+        }
+    }
+
+    public class Wrap_OilyFilter : Wrap_Filter
+    {
+        public Wrap_OilyFilter()
+        {
+            filterName = "Oily";
+            filter = new OilyFilter();
+        }
+    }
+
+    public class Wrap_PaintFilter : Wrap_Filter
+    {
+        public RangeProperty Level;
+        public Wrap_PaintFilter()
+        {
+            filterName = "Paint";
+            Level = new RangeProperty("Paint Level", 2, 4, 1);
+            Level.PropertyChanged += Level_PropertyChanged;
+            filter = new PaintFilter((int)Level.Value);
+            RangeProperties.Add(Level);
+        }
+
+        void Level_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as PaintFilter).Level = (int)Level.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch (Exception)
+                {
+                    //Ignore Exception
+                }
+            }
+        }
+    }
+
+    public class Wrap_PosterizeFilter : Wrap_Filter
+    {
+        public RangeProperty ColorComponentValueCount;
+        public Wrap_PosterizeFilter()
+        {
+            filterName = "Posterize";
+            ColorComponentValueCount = new RangeProperty("Color component count", 6, 16, 2);
+            ColorComponentValueCount.PropertyChanged += ColorComponentValueCount_PropertyChanged;
+            filter = new PosterizeFilter((int)ColorComponentValueCount.Value);
+            RangeProperties.Add(ColorComponentValueCount);
+        }
+
+        void ColorComponentValueCount_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as PosterizeFilter).ColorComponentValueCount = (int)ColorComponentValueCount.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch (Exception)
+                {
+                    //Ignore exception
+                }
+            }
+        }
+    }
+
+    public class Wrap_SepiaFilter : Wrap_Filter
+    {
+        public Wrap_SepiaFilter()
+        {
+            filterName = "Sepia";
+            filter = new SepiaFilter();
+        }
+    }
+
+    public class Wrap_SharpnessFilter : Wrap_Filter
+    {
+        public RangeProperty Level;
+        public Wrap_SharpnessFilter()
+        {
+            filterName = "Sharper";
+            Level = new RangeProperty("Sharpness", 3, 7, 0);
+            Level.PropertyChanged += Level_PropertyChanged;
+            filter = new SharpnessFilter((int)Level.Value);
+            RangeProperties.Add(Level);
+        }
+
+        void Level_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as SharpnessFilter).Level = (int)Level.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch (Exception)
+                {
+                    //Ignore exception
+                }
+            }
+        }
+    }
+    
+    public class Wrap_SketchFilter : Wrap_Filter
+    {
+        public EnumProperty Mode;
+        public Wrap_SketchFilter()
+        {
+            filterName = "Sketchy";
+            Mode = new EnumProperty("Sketch Mode", (double)SketchMode.Color);
+            Mode.AddEnum((int)SketchMode.Gray, "Gray");
+            Mode.AddEnum((int)SketchMode.Color, "Color");
+            Mode.PropertyChanged += Mode_PropertyChanged;
+            filter = new SketchFilter((SketchMode)Mode.Value);
+            EnumProperties.Add(Mode);
+        }
+
+        void Mode_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as SketchFilter).SketchMode = (SketchMode)Mode.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch (Exception)
+                {
+                    //Ignore exception
+                }
+            }
+        }
+    }
+
+    public class Wrap_SolarizeFilter : Wrap_Filter
+    {
+        public RangeProperty Threshold;
+        public Wrap_SolarizeFilter()
+        {
+            filterName = "Solarize";
+            Threshold = new RangeProperty("Threshold", .3, 1, 0);
+            Threshold.PropertyChanged += Threshold_PropertyChanged;
+            filter = new SolarizeFilter(Threshold.Value);
+            RangeProperties.Add(Threshold);
+        }
+
+        void Threshold_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as SolarizeFilter).Threshold = Threshold.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch (Exception)
+                {
+                    //Ignore exception
+                }
+            }
+        }
+    }
+
+    public class Wrap_StampFilter : Wrap_Filter
+    {
+        public RangeProperty Smoothness;
+        public RangeProperty Threshold;
+        public Wrap_StampFilter()
+        {
+            filterName = "Stamp";
+            Smoothness = new RangeProperty("Smoothness", 2, 6, 0);
+            Threshold = new RangeProperty("Threshold", .3, 1, 0);
+            Smoothness.PropertyChanged += Smoothness_PropertyChanged;
+            Threshold.PropertyChanged += Threshold_PropertyChanged;
+            filter = new StampFilter((int)Smoothness.Value, Threshold.Value);
+            RangeProperties.Add(Smoothness);
+            RangeProperties.Add(Threshold);
+        }
+
+        void Threshold_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as StampFilter).Threshold = Threshold.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch
+                {
+                    //Ignore exception
+                }
+            }
+        }
+
+        void Smoothness_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as StampFilter).Smoothness = (int)Smoothness.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch
+                {
+                    //Ignore exception
+                }
+            }
+        }
+    }
+
     public class Wrap_TemperatureAndTintFilter : Wrap_Filter
     {
         public RangeProperty Temperature;
@@ -658,11 +895,11 @@ namespace FilterMage.Models
         public Wrap_TemperatureAndTintFilter()
         {
             filterName = "Temperature & Tint";
-            Temperature = new RangeProperty("Temperature", .4, 2, 0);   //Actual range is -1 to 1
-            Tint = new RangeProperty("Tint", .4, 2, 0); //Actual range is -1 to 1
+            Temperature = new RangeProperty("Temperature", 1.4, 2, 0);   //Actual range is -1 to 1
+            Tint = new RangeProperty("Tint", 1.4, 2, 0); //Actual range is -1 to 1
             Temperature.PropertyChanged += Temperature_PropertyChanged;
             Tint.PropertyChanged += Tint_PropertyChanged;
-            filter = new TemperatureAndTintFilter(Temperature.Value, Tint.Value);
+            filter = new TemperatureAndTintFilter(Temperature.Value - 1, Tint.Value - 1);
             RangeProperties.Add(Temperature);
             RangeProperties.Add(Tint);
         }
@@ -673,7 +910,7 @@ namespace FilterMage.Models
             {
                 try
                 {
-                    (filter as TemperatureAndTintFilter).Tint = Tint.Value;
+                    (filter as TemperatureAndTintFilter).Tint = Tint.Value - 1;
                     NotifyFilterRefreshed();
                 }
                 catch (Exception)
@@ -689,7 +926,7 @@ namespace FilterMage.Models
             {
                 try
                 {
-                    (filter as TemperatureAndTintFilter).Temperature = Temperature.Value;
+                    (filter as TemperatureAndTintFilter).Temperature = Temperature.Value - 1;
                     NotifyFilterRefreshed();
                 }
                 catch (Exception)
@@ -744,6 +981,37 @@ namespace FilterMage.Models
                 catch (Exception)
                 {
                     //Ignore exception
+                }
+            }
+        }
+    }
+
+    public class Wrap_WhiteboardEnhancementFilter : Wrap_Filter
+    {
+        public EnumProperty Mode;
+        public Wrap_WhiteboardEnhancementFilter()
+        {
+            filterName = "Whiteboard Enhance";
+            Mode = new EnumProperty("Enhancement Mode", (double)WhiteboardEnhancementMode.Hard);
+            Mode.AddEnum((int)WhiteboardEnhancementMode.Hard, "Hard");
+            Mode.AddEnum((int)WhiteboardEnhancementMode.Soft, "Soft");
+            Mode.PropertyChanged += Mode_PropertyChanged;
+            filter = new WhiteboardEnhancementFilter((WhiteboardEnhancementMode)Mode.Value);
+            EnumProperties.Add(Mode);
+        }
+
+        void Mode_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Value")
+            {
+                try
+                {
+                    (filter as WhiteboardEnhancementFilter).WhiteboardEnhancementMode = (WhiteboardEnhancementMode)Mode.Value;
+                    NotifyFilterRefreshed();
+                }
+                catch (Exception)
+                {
+                    //Ignore Exception
                 }
             }
         }

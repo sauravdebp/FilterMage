@@ -1,44 +1,48 @@
-﻿using Nokia.Graphics.Imaging;
+﻿using FilterMage.Models;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
-using FilterMage.Models;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace FilterMage.ViewModels
 {
     public class Preview : INotifyPropertyChanged
     {
-        private Stream originalImage = null;
+        public enum SCALE
+        {
+            FIT_SCREEN,
+            FILL_SCREEN
+        };
+
+        private SCALE previewScale = SCALE.FIT_SCREEN;
+        private Stream originalImageStream = null;
+        private WriteableBitmap originalPreviewImage = null;
+        public WriteableBitmap OriginalPreview
+        {
+            get { return originalPreviewImage; }
+        }
         private int previewWidth;
         private int previewHeight;
+        private int originalPreviewHeight;
+        private int originalPreviewWidth;
         private List<WriteableBitmap> prevPreviews = new List<WriteableBitmap>(10);
+        private List<Wrap_Filter> activeFilters = null;
 
-        private WriteableBitmap _previewImage = null;
-        public WriteableBitmap previewImage
+        private WriteableBitmap fullResImage = null;
+        public WriteableBitmap previewImage = null;
+        private Effect eff = null;
+        public Effect Effect
         {
-            get { return _previewImage; }
-            set
-            {
-                _previewImage = value;
-                NotifyPropertyChanged("previewImage");
-            }
+            get { return eff; }
         }
 
-        private int _noofFilters;
-        public int noofFilters
+        public int NoofFilters
         {
-            get { return _noofFilters; }
-            set
-            {
-                _noofFilters = value;
-                NotifyPropertyChanged("noofFilters");
-            }
+            get { return activeFilters.Count; }
         }
         
         public string LastFilter
@@ -51,53 +55,66 @@ namespace FilterMage.ViewModels
             }
         }
 
-        private List<Wrap_Filter> activeFilters = null;
-
         public Preview(Stream image, int width, int height)
         {
-            originalImage = image;
-            previewWidth = width;
-            previewHeight = height;
+            originalImageStream = image;
+            originalPreviewWidth = width;
+            originalPreviewHeight = height;
             activeFilters = new List<Wrap_Filter>();
-            previewImage = CreatePreviewFromStream();
+            eff = new Effect();
+            CreatePreviewFromStream();
         }
 
         private WriteableBitmap CreatePreviewFromStream()
         {
-            originalImage.Position = 0;
-            previewImage = new WriteableBitmap(previewWidth, previewHeight);
-            previewImage.SetSource(originalImage);
+            originalImageStream.Position = 0;
+            originalPreviewImage = new WriteableBitmap(previewWidth, previewHeight);
+            originalPreviewImage.SetSource(originalImageStream);
 
-            int target = previewHeight;
-            fixedDim fixedFlag = fixedDim.HEIGHT;
-            if (previewImage.PixelWidth > previewImage.PixelHeight)
-            {
-                target = previewWidth;
-                fixedFlag = fixedDim.WIDTH;
-            }
-            Resolution dim = new Resolution(previewImage.PixelWidth, previewImage.PixelHeight, target, fixedFlag);
-            previewImage = previewImage.Resize(dim.width, dim.height, WriteableBitmapExtensions.Interpolation.Bilinear);
-            return previewImage;
+            ScalePreviewImageRes(SCALE.FIT_SCREEN);
+            previewImage = new WriteableBitmap(originalPreviewImage);
+            return originalPreviewImage;
         }
 
-        private async Task<WriteableBitmap> ApplyFilters(List<IFilter> filters)
+        private void ScalePreviewImageRes(SCALE scale)
         {
-            Effect eff = new Effect(filters);
-            WriteableBitmap newImage = new WriteableBitmap(previewImage.PixelWidth, previewImage.PixelHeight);
-            newImage = await eff.ApplyEffect(previewImage, newImage);
-            previewImage = newImage;
+            previewScale = scale;
+            int target = originalPreviewHeight;
+            fixedDim fixedFlag = fixedDim.HEIGHT;
+            if (originalPreviewImage.PixelWidth > originalPreviewImage.PixelHeight)
+            {
+                target = originalPreviewWidth;
+                fixedFlag = fixedDim.WIDTH;
+            }
+            if (scale == SCALE.FILL_SCREEN)
+            {
+                if (fixedFlag == fixedDim.HEIGHT)
+                    fixedFlag = fixedDim.WIDTH;
+                else
+                    fixedFlag = fixedDim.HEIGHT;
+            }
+            Resolution dim = new Resolution(originalPreviewImage.PixelWidth, originalPreviewImage.PixelHeight, target, fixedFlag);
+            originalPreviewImage = originalPreviewImage.Resize(dim.width, dim.height, WriteableBitmapExtensions.Interpolation.Bilinear);
+            previewWidth = dim.width;
+            previewHeight = dim.height;
+        }
+
+        private async Task<WriteableBitmap> ApplyEffect()
+        {
+            WriteableBitmap tmp = new WriteableBitmap(previewWidth, previewHeight);
+            await eff.ApplyEffect(originalPreviewImage, tmp);
+            previewImage = tmp;
             return previewImage;
         }
 
         public async Task<WriteableBitmap> ApplyFilter(Wrap_Filter filter)
         {
             activeFilters.Add(filter);
-            noofFilters = activeFilters.Count;
-            prevPreviews.Add(previewImage);
-            List<IFilter> filters = new List<IFilter>();
-            filters.Add(filter.filter);
+            //prevPreviews.Add(previewImage);
+            eff.addFilter(filter.filter);
             NotifyPropertyChanged("LastFilter");
-            return await ApplyFilters(filters);
+            NotifyPropertyChanged("NoofFilters");
+            return await ApplyEffect();
         }
 
         public async Task<WriteableBitmap> UndoLastFilter()
@@ -105,23 +122,19 @@ namespace FilterMage.ViewModels
             if (activeFilters.Count == 0)
                 return null;
             activeFilters.RemoveAt(activeFilters.Count - 1);
-            noofFilters = activeFilters.Count;
-            if (prevPreviews.Count > 0)
+            /*if (prevPreviews.Count > 0)
             {
                 previewImage = prevPreviews.Last();
                 prevPreviews.Remove(prevPreviews.Last());
-            }
-            else
+            }*/
+            //else
             {
-                previewImage = CreatePreviewFromStream();
-                List<IFilter> filters = new List<IFilter>();
-                foreach (Wrap_Filter wFilter in activeFilters)
-                {
-                    filters.Add(wFilter.filter);
-                }
-                await ApplyFilters(filters);
+                //previewImage = CreatePreviewFromStream();
+                eff.remFilter();
+                await ApplyEffect();
             }
             NotifyPropertyChanged("LastFilter");
+            NotifyPropertyChanged("NoofFilters");
             return previewImage;
         }
 
@@ -132,39 +145,50 @@ namespace FilterMage.ViewModels
             return null;
         }
 
-        public WriteableBitmap ClearAllFilters()
+        public async Task<WriteableBitmap> ClearAllFilters()
         {
             try
             {
                 activeFilters.Clear();
                 prevPreviews.Clear();
-                noofFilters = activeFilters.Count;
-                previewImage = CreatePreviewFromStream();
+                eff.clearFilters();
+                await ApplyEffect();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message + " in Preview.cs ClearAllFilters()");
             }
             NotifyPropertyChanged("LastFilter");
-            return previewImage;
+            NotifyPropertyChanged("NoofFilters");
+            return originalPreviewImage;
         }
 
         public async Task<WriteableBitmap> CreateFullResPreview()
         {
-            WriteableBitmap original = new WriteableBitmap(0, 0);
-            original.SetSource(originalImage);
-            WriteableBitmap source = new WriteableBitmap(original);
-            WriteableBitmap dest = new WriteableBitmap(source.PixelWidth, source.PixelHeight);
-            foreach (Wrap_Filter w_filter in activeFilters)
+            WriteableBitmap tempFullRes = new WriteableBitmap(0, 0);
+            tempFullRes.SetSource(originalImageStream);
+            if (fullResImage == null)
             {
-                Effect eff = new Effect(w_filter.filter);
-                await eff.ApplyEffect(source, dest);
-                source = null;
-                source = new WriteableBitmap(dest);
-                dest = null;
-                dest = new WriteableBitmap(source.PixelWidth, source.PixelHeight);
+                fullResImage = new WriteableBitmap(tempFullRes.PixelWidth, tempFullRes.PixelHeight);
             }
-            return source;
+            fullResImage = await eff.ApplyEffect(tempFullRes , fullResImage);
+            tempFullRes = null;
+            return fullResImage;
+        }
+
+        public async Task<SCALE> TogglePreviewRes()
+        {
+            originalPreviewImage.SetSource(originalImageStream);
+            if (previewScale == SCALE.FILL_SCREEN)
+            {
+                ScalePreviewImageRes(SCALE.FIT_SCREEN);
+            }
+            else
+            {
+                ScalePreviewImageRes(SCALE.FILL_SCREEN);
+            }
+            await ApplyEffect();
+            return previewScale;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

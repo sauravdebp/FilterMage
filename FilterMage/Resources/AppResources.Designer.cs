@@ -79,7 +79,7 @@ namespace FilterMage.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FilterMesh.
+        ///   Looks up a localized string similar to Filter Mesh.
         /// </summary>
         public static string ApplicationTitle {
             get {

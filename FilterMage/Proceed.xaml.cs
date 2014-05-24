@@ -1,21 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
+﻿using FilterMage.ViewModels;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
-using System.Windows.Media.Imaging;
-using System.IO;
-using Microsoft.Xna.Framework.Media;
-using System.Windows.Input;
-using System.Windows.Media;
 using Microsoft.Phone.Tasks;
-using FilterMage.ViewModels;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Media.PhoneExtensions;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 
 namespace FilterMage
 {
@@ -27,7 +21,7 @@ namespace FilterMage
         public Proceed()
         {
             InitializeComponent();
-            preview = (App.Current as App).tempPreview;
+            preview = (App.Current as App).preview;
             Image_FullImage.Source = preview.previewImage;
             RenderImage();
         }
@@ -35,6 +29,7 @@ namespace FilterMage
         private async void RenderImage()
         {
             finalImage = await preview.CreateFullResPreview();
+            //finalImage = preview.GetFullResImage();
             Image_FullImage.Source = finalImage;
             Text_Resolution.Text = finalImage.PixelWidth.ToString() + " X " + finalImage.PixelHeight.ToString();
             Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
@@ -64,7 +59,7 @@ namespace FilterMage
                 imagePath = await Task.Run(() => SaveImage());
             }
             Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
-            MessageBox.Show("Image saved");
+            MessageBox.Show("Image saved in saved pictures folder");
         }
 
         private string SaveImage()
@@ -96,6 +91,11 @@ namespace FilterMage
             share.Show();
             Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
             (sender as ApplicationBarIconButton).IsEnabled = true;
+        }
+
+        private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/About_Settings.xaml", UriKind.Relative));
         }
     }
 }
