@@ -57,6 +57,7 @@
                                    Text="Tip: Smaller thumbnail means smoother performance"/>
                         <!--HyperlinkButton HorizontalAlignment="Left"
                                          Click="HyperlinkButton_Click">Open quick start guide</HyperlinkButton-->
+                        <Button Content="Rate This App" Name="But_Rate" Click="But_Rate_Click"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,50">
                         <TextBlock Style="{StaticResource PhoneTextNormalStyle}"

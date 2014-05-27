@@ -30,6 +30,11 @@ namespace FilterMage
             s.Save();
             NavigationService.Navigate(new Uri("/Tutorial.xaml", UriKind.Relative));
         }
+
+        private void But_Rate_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            RateMyApp.Helpers.FeedbackHelper.Default.Review();
+        }
     }
 
     public class Settings : INotifyPropertyChanged
