@@ -75,6 +75,7 @@ namespace FilterMage
             List_Thumbnails.DataContext = filterThumbnails;
             PageState = States.INITIAL;
             Settings();
+            
         }
 
         private bool canSkipTutorial()

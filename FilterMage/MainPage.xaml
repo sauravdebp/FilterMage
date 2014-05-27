@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tk="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
     xmlns:local="clr-namespace:FilterMage"
+    xmlns:rma="clr-namespace:RateMyApp.Controls;assembly=RateMyApp"
     mc:Ignorable="d"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
@@ -128,6 +129,12 @@
 
             Before shipping remove this XAML and the image itself.-->
         <!--<Image Source="/Assets/AlignmentGrid.png" VerticalAlignment="Top" Height="800" Width="480" Margin="0,-32,0,0" Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False" />-->
+        <!-- Feedback overlay -->
+        <rma:FeedbackOverlay x:Name="FeedbackOverlay"
+                             Grid.RowSpan="2"
+                             FeedbackTo="abcdvluprs@outlook.com"
+                             ApplicationName="Filter Mesh"
+                             CompanyName="@abcdvluprs"/>
     </Grid>
 
     <phone:PhoneApplicationPage.ApplicationBar>
