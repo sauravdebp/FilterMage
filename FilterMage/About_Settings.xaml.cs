@@ -1,5 +1,6 @@
 ﻿using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
+using Microsoft.Phone.Tasks;
 using System;
 using System.ComponentModel;
 using System.IO.IsolatedStorage;
@@ -24,16 +25,17 @@ namespace FilterMage
             base.OnNavigatedFrom(e);
         }
 
-        private void HyperlinkButton_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            s.SetTutorialOn();
-            s.Save();
-            NavigationService.Navigate(new Uri("/Tutorial.xaml", UriKind.Relative));
-        }
-
         private void But_Rate_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             RateMyApp.Helpers.FeedbackHelper.Default.Review();
+        }
+
+        private void Link_feedback_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            EmailComposeTask mailTask = new EmailComposeTask();
+            mailTask.To = "abcdvluprs@outlook.com";
+            mailTask.Subject = "Filter Mesh Feedback";
+            mailTask.Show();
         }
     }
 

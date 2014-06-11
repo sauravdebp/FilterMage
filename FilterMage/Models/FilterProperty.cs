@@ -415,7 +415,7 @@ namespace FilterMage.Models
         public Wrap_ExposureFilter()
         {
             filterName = "Exposure";
-            Gain = new RangeProperty("Gain", .5, 3, 0); //Actual range is -1.5 to 1.5
+            Gain = new RangeProperty("Gain", .5, 3, 0.5); //Actual range is -1.5 to 1.5
             Mode = new EnumProperty("Exposure Mode", (int)ExposureMode.Natural);
             Mode.AddEnum((int)ExposureMode.Natural, "Natural");
             Mode.AddEnum((int)ExposureMode.Gamma, "Gamma");

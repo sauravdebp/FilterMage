@@ -21,13 +21,12 @@
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="#FFFFFFAC" Margin="0, 0, 0, 3">
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="0, 0, 0, 3">
             <Grid>
                 <TextBlock Text="{Binding Path=LocalizedResources.ApplicationTitle, 
                                         Source={StaticResource LocalizedStrings}}"
                        Style="{StaticResource PhoneTextNormalStyle}"
-                       Margin="12,0"
-                       Foreground="#FF11395B"/>
+                       Margin="12,0"/>
                 <TextBlock Text="About + Settings" 
                            Style="{StaticResource PhoneTextNormalStyle}"
                            HorizontalAlignment="Right" Foreground="#FFBBCFBE"/>
@@ -67,8 +66,12 @@
                     Did you find any bugs? Do you have any suggestions? Do you have any questions concerning this software?
                     If yes, then contact us at:
                         </TextBlock>
-                        <TextBlock Style="{StaticResource PhoneTextNormalStyle}"
-                                   TextDecorations="Underline">abcdvluprs@outlook.com</TextBlock>
+                        <HyperlinkButton FontSize="20" 
+                                         Name="Link_feedback"
+                                         HorizontalAlignment="Left"
+                                         Click="Link_feedback_Click">
+                            abcdvluprs@outlook.com
+                        </HyperlinkButton>
                     </StackPanel>
                     <StackPanel Margin="0,0,0,50">
                         <TextBlock Style="{StaticResource PhoneTextNormalStyle}"
