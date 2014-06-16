@@ -97,7 +97,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Value}" />
+                                    <!--TextBlock Text="{Binding Value}" /-->
                                     <TextBlock Text="{Binding PropertyName}" />
                                     <Slider Value="{Binding Value, Mode=TwoWay}" 
                                         Maximum="{Binding Max, Mode=OneTime}" 

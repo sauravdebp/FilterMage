@@ -11,6 +11,7 @@ using System.IO.IsolatedStorage;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using FilterMage.Utils;
 
 namespace FilterMage
 {
@@ -67,6 +68,7 @@ namespace FilterMage
                 }
             }
         }
+
         // Constructor
         public MainPage()
         {
@@ -75,7 +77,7 @@ namespace FilterMage
             List_Thumbnails.DataContext = filterThumbnails;
             PageState = States.INITIAL;
             Settings();
-            
+            Advert_Google.Children.Add(Advertisement.BannerAd());
         }
 
         private bool canSkipTutorial()
@@ -288,10 +290,18 @@ namespace FilterMage
             }
         }
 
+        protected override void OnBackKeyPress(System.ComponentModel.CancelEventArgs e)
+        {
+            if (preview != null)
+            {
+                if (MessageBox.Show("Close Filter Mesh?", "Close Filter Mesh?", MessageBoxButton.OKCancel) == MessageBoxResult.Cancel)
+                    e.Cancel = true;
+            }
+        }
+
         private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
         {
             NavigationService.Navigate(new Uri("/About_Settings.xaml", UriKind.Relative));
-            
         }
 
         private async void Image_PreviewImage_DoubleTap(object sender, System.Windows.Input.GestureEventArgs e)

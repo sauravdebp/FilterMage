@@ -50,11 +50,13 @@
             <shell:ApplicationBarIconButton x:Name="AppBarBut_Save" 
                                             Click="AppBarBut_Save_Click" 
                                             IconUri="/Assets/AppBar/save.png" 
-                                            Text="Save"/>
+                                            Text="Save"
+                                            IsEnabled="False"/>
             <shell:ApplicationBarIconButton x:Name="AppBarBut_Share" 
                                             Click="AppBarBut_Share_Click"
                                             IconUri="/Assets/AppBar/share.png" 
-                                            Text="share"/>
+                                            Text="share"
+                                            IsEnabled="False"/>
             <shell:ApplicationBar.MenuItems>
                 <shell:ApplicationBarMenuItem Click="ApplicationBarMenuItem_Click"
                                               Text="About + Settings"/>

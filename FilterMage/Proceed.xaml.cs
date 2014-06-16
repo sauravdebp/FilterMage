@@ -33,6 +33,8 @@ namespace FilterMage
             Image_FullImage.Source = finalImage;
             Text_Resolution.Text = finalImage.PixelWidth.ToString() + " X " + finalImage.PixelHeight.ToString();
             Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
+            (ApplicationBar.Buttons[0] as ApplicationBarIconButton).IsEnabled = true;
+            (ApplicationBar.Buttons[1] as ApplicationBarIconButton).IsEnabled = true;
         }
 
         protected override void OnOrientationChanged(OrientationChangedEventArgs e)
@@ -59,7 +61,7 @@ namespace FilterMage
                 imagePath = await Task.Run(() => SaveImage());
             }
             Progress_Rendering.Visibility = System.Windows.Visibility.Collapsed;
-            MessageBox.Show("Image saved in saved pictures folder");
+            MessageBox.Show("Image saved");// in saved pictures folder");
         }
 
         private string SaveImage()
@@ -71,7 +73,8 @@ namespace FilterMage
             {
                 MediaLibrary lib = new MediaLibrary();
                 string imageName = String.Format("FilterMesh_{0:G}", DateTime.Now);
-                return lib.SavePicture(imageName, jpeg).GetPath();
+                return lib.SavePictureToCameraRoll(imageName, jpeg).GetPath();
+                //return lib.SavePicture(imageName, jpeg).GetPath();
             }
             catch (Exception ex)
             {
